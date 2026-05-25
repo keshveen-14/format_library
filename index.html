@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Format Library</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e0e0e0;height:100vh;display:flex;flex-direction:column}
+#app{display:flex;flex:1;overflow:hidden;border:1px solid #2a2a2a}
+#sidebar{width:210px;min-width:210px;border-right:1px solid #2a2a2a;overflow-y:auto;padding:10px 0;background:#141414}
+.section-label{font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.1em;padding:10px 14px 4px}
+.fmt-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;transition:background .1s}
+.fmt-item:hover{background:#1e1e1e}
+.fmt-item.active{background:#1e1e1e}
+.fmt-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.fmt-info{flex:1;min-width:0}
+.fmt-name{font-size:13px;font-weight:500;color:#e0e0e0}
+.fmt-desc{font-size:11px;color:#555}
+.fmt-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:auto;flex-shrink:0}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#111}
+#key-bar{padding:8px 14px;border-bottom:1px solid #2a2a2a;display:flex;gap:8px;align-items:center;background:#141414}
+#key-bar label{font-size:12px;color:#888;white-space:nowrap}
+#api-key-input{flex:1;padding:6px 10px;font-size:12px;border:1px solid #2a2a2a;border-radius:6px;background:#0f0f0f;color:#e0e0e0;outline:none;font-family:monospace}
+#api-key-input:focus{border-color:#555}
+#model-select{padding:6px 8px;font-size:12px;border:1px solid #2a2a2a;border-radius:6px;background:#0f0f0f;color:#e0e0e0;outline:none;max-width:220px}
+#toolbar{padding:8px 14px;border-bottom:1px solid #2a2a2a;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.tb-label{font-size:11px;color:#666;margin-right:2px}
+.pill{padding:4px 10px;border-radius:20px;border:1px solid #2a2a2a;font-size:12px;cursor:pointer;background:transparent;color:#888;transition:.1s}
+.pill:hover{background:#1e1e1e;color:#ccc}
+.pill.active{background:#1e1e1e;color:#e0e0e0;border-color:#444}
+.pill-green.active{background:#1a2e1a;color:#6abf69;border-color:#3a6b3a}
+#content-area{flex:1;display:flex;flex-direction:column;padding:12px 14px;gap:8px;overflow:hidden}
+#prompt-row{display:flex;gap:8px}
+#prompt-input{flex:1;padding:9px 12px;font-size:14px;border:1px solid #2a2a2a;border-radius:6px;background:#1a1a1a;color:#e0e0e0;outline:none}
+#prompt-input:focus{border-color:#555}
+#gen-btn{padding:9px 18px;border-radius:6px;background:#6c47d4;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;transition:.1s}
+#gen-btn:hover{background:#7c57e4}
+#gen-btn:disabled{opacity:.4;cursor:not-allowed}
+#output-box{flex:1;border:1px solid #2a2a2a;border-radius:6px;background:#0f0f0f;overflow-y:auto;padding:12px;font-size:13px;line-height:1.7;color:#e0e0e0;white-space:pre-wrap;font-family:monospace}
+#status-row{display:flex;justify-content:space-between;align-items:center}
+#status{font-size:12px;color:#555}
+#fmt-label{font-size:12px;color:#555}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div class="section-label">Data</div>
+    <div class="fmt-item active" data-fmt="CSV" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#1a2e1a;color:#6abf69">⊞</div>
+      <div class="fmt-info"><div class="fmt-name">CSV</div><div class="fmt-desc">Tabular data</div></div>
+      <span class="fmt-tag" style="background:#1a2e1a;color:#6abf69">Data</span>
+    </div>
+    <div class="fmt-item" data-fmt="JSON" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#1a1e2e;color:#6a8fbf">{}</div>
+      <div class="fmt-info"><div class="fmt-name">JSON</div><div class="fmt-desc">Key-value structure</div></div>
+      <span class="fmt-tag" style="background:#1a1e2e;color:#6a8fbf">Data</span>
+    </div>
+    <div class="fmt-item" data-fmt="XML" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#1a2e1a;color:#6abf69">&lt;/&gt;</div>
+      <div class="fmt-info"><div class="fmt-name">XML</div><div class="fmt-desc">Tagged markup</div></div>
+      <span class="fmt-tag" style="background:#1a2e1a;color:#6abf69">Data</span>
+    </div>
+    <div class="fmt-item" data-fmt="YAML" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#2e2a1a;color:#bfa96a">⚙</div>
+      <div class="fmt-info"><div class="fmt-name">YAML</div><div class="fmt-desc">Config format</div></div>
+      <span class="fmt-tag" style="background:#2e2a1a;color:#bfa96a">Config</span>
+    </div>
+    <div class="section-label" style="margin-top:6px">Documents</div>
+    <div class="fmt-item" data-fmt="Markdown" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#2a1a2e;color:#b06abf">M↓</div>
+      <div class="fmt-info"><div class="fmt-name">Markdown</div><div class="fmt-desc">Formatted doc</div></div>
+      <span class="fmt-tag" style="background:#2a1a2e;color:#b06abf">Doc</span>
+    </div>
+    <div class="fmt-item" data-fmt="Handbook" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#1a1e2e;color:#6a8fbf">📘</div>
+      <div class="fmt-info"><div class="fmt-name">Handbook</div><div class="fmt-desc">Step-by-step guide</div></div>
+      <span class="fmt-tag" style="background:#1a1e2e;color:#6a8fbf">Doc</span>
+    </div>
+    <div class="fmt-item" data-fmt="Report" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#2e1a1e;color:#bf6a7a">📄</div>
+      <div class="fmt-info"><div class="fmt-name">Report</div><div class="fmt-desc">Formal report</div></div>
+      <span class="fmt-tag" style="background:#2e1a1e;color:#bf6a7a">Doc</span>
+    </div>
+    <div class="fmt-item" data-fmt="SOP" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#1a2e1a;color:#6abf69">✓</div>
+      <div class="fmt-info"><div class="fmt-name">SOP</div><div class="fmt-desc">Standard procedure</div></div>
+      <span class="fmt-tag" style="background:#1a2e1a;color:#6abf69">Doc</span>
+    </div>
+    <div class="section-label" style="margin-top:6px">Code</div>
+    <div class="fmt-item" data-fmt="Python" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#1a1e2e;color:#6a8fbf">Py</div>
+      <div class="fmt-info"><div class="fmt-name">Python</div><div class="fmt-desc">Script / module</div></div>
+      <span class="fmt-tag" style="background:#1a1e2e;color:#6a8fbf">Code</span>
+    </div>
+    <div class="fmt-item" data-fmt="SQL" onclick="selectFmt(this)">
+      <div class="fmt-icon" style="background:#2e2a1a;color:#bfa96a">DB</div>
+      <div class="fmt-info"><div class="fmt-name">SQL</div><div class="fmt-desc">Database query</div></div>
+      <span class="fmt-tag" style="background:#2e2a1a;color:#bfa96a">Code</span>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="key-bar">
+      <label>🔑 OpenRouter Key</label>
+      <input id="api-key-input" type="password" placeholder="sk-or-v1-...  (get free key at openrouter.ai)" />
+      <select id="model-select">
+        <option value="openrouter/auto">Auto (best available free)</option>
+        <option value="deepseek/deepseek-r1:free">DeepSeek R1 (free)</option>
+        <option value="deepseek/deepseek-v3-base:free">DeepSeek V3 (free)</option>
+        <option value="meta-llama/llama-4-scout:free">Llama 4 Scout (free)</option>
+        <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick (free)</option>
+        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (free)</option>
+        <option value="qwen/qwen3-8b:free">Qwen3 8B (free)</option>
+        <option value="qwen/qwen3-14b:free">Qwen3 14B (free)</option>
+        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (free)</option>
+        <option value="google/gemma-3-4b-it:free">Gemma 3 4B (free)</option>
+        <option value="google/gemma-3-12b-it:free">Gemma 3 12B (free)</option>
+        <option value="nvidia/llama-3.1-nemotron-70b-instruct:free">Nemotron 70B (free)</option>
+      </select>
+    </div>
+
+    <div id="toolbar">
+      <span class="tb-label">Tone</span>
+      <button class="pill active" onclick="setTone(this)">Professional</button>
+      <button class="pill" onclick="setTone(this)">Casual</button>
+      <button class="pill" onclick="setTone(this)">Technical</button>
+      <button class="pill" onclick="setTone(this)">Creative</button>
+      <button class="pill" onclick="setTone(this)">Concise</button>
+      &nbsp;
+      <span class="tb-label">Length</span>
+      <button class="pill pill-green active" onclick="setLen(this)">Short</button>
+      <button class="pill pill-green" onclick="setLen(this)">Medium</button>
+      <button class="pill pill-green" onclick="setLen(this)">Long</button>
+    </div>
+
+    <div id="content-area">
+      <div id="prompt-row">
+        <input id="prompt-input" placeholder="Enter a topic or description… then press Enter or click Generate" value="deep learning" />
+        <button id="gen-btn" onclick="generate()">→ Generate</button>
+      </div>
+      <div id="status-row">
+        <span id="status">Paste your OpenRouter API key to get started</span>
+        <span id="fmt-label">Format: <strong id="fmt-display">CSV</strong></span>
+      </div>
+      <div id="output-box" style="color:#555;font-family:system-ui,sans-serif">Output will appear here after you generate.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentFmt='CSV', currentTone='Professional', currentLen='Short';
+
+function selectFmt(el){
+  document.querySelectorAll('.fmt-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  currentFmt=el.dataset.fmt;
+  document.getElementById('fmt-display').textContent=currentFmt;
+}
+function setTone(el){
+  document.querySelectorAll('#toolbar .pill:not(.pill-green)').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  currentTone=el.textContent;
+}
+function setLen(el){
+  document.querySelectorAll('.pill-green').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  currentLen=el.textContent;
+}
+
+const fmtInstructions={
+  CSV:'Return ONLY valid CSV data with a header row. No explanation, no markdown fences.',
+  JSON:'Return ONLY valid JSON. No explanation, no markdown fences.',
+  XML:'Return ONLY valid XML. No explanation, no markdown fences.',
+  YAML:'Return ONLY valid YAML. No explanation, no markdown fences.',
+  Markdown:'Return a well-structured Markdown document with headings, lists, and code blocks where appropriate.',
+  Handbook:'Return a step-by-step handbook in Markdown with numbered steps, tips, and a summary.',
+  Report:'Return a formal report in Markdown with Executive Summary, Findings, and Recommendations sections.',
+  SOP:'Return a Standard Operating Procedure in Markdown with Purpose, Scope, Procedure steps, and Notes.',
+  Python:'Return ONLY working Python code with docstrings. No markdown fences.',
+  SQL:'Return ONLY valid SQL with comments explaining key parts. No markdown fences.'
+};
+const lenMap={
+  Short:'Keep it brief, around 150-250 words.',
+  Medium:'Aim for moderate length, around 400-600 words.',
+  Long:'Be comprehensive, around 800-1200 words.'
+};
+
+async function generate(){
+  const key=document.getElementById('api-key-input').value.trim();
+  const topic=document.getElementById('prompt-input').value.trim();
+  const model=document.getElementById('model-select').value;
+  const out=document.getElementById('output-box');
+  const status=document.getElementById('status');
+  const btn=document.getElementById('gen-btn');
+
+  if(!key){
+    out.style.fontFamily='system-ui,sans-serif';
+    out.style.color='#e05555';
+    out.textContent='Please enter your OpenRouter API key above.\nGet a free key at https://openrouter.ai';
+    return;
+  }
+  if(!topic){ alert('Enter a topic first.'); return; }
+
+  btn.disabled=true;
+  out.style.fontFamily='monospace';
+  out.style.color='#e0e0e0';
+  out.textContent='Generating...';
+  status.textContent='Sending request…';
+
+  const systemPrompt=`You are a format generation assistant. ${fmtInstructions[currentFmt]} Tone: ${currentTone}. ${lenMap[currentLen]}`;
+
+  try{
+    const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+key,
+        'HTTP-Referer':window.location.href,
+        'X-Title':'Format Library'
+      },
+      body:JSON.stringify({
+        model:model,
+        messages:[
+          {role:'system',content:systemPrompt},
+          {role:'user',content:'Generate '+currentFmt+' content about: '+topic}
+        ]
+      })
+    });
+
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error?.message||'HTTP '+resp.status);
+
+    const text=data.choices?.[0]?.message?.content||'(no output)';
+    out.textContent=text;
+    const tokens=data.usage?.completion_tokens;
+    const usedModel=data.model||model;
+    status.textContent='Done · model: '+usedModel+(tokens?' · '+tokens+' tokens':'');
+  }catch(e){
+    out.style.fontFamily='system-ui,sans-serif';
+    out.style.color='#e05555';
+    out.textContent='Error: '+e.message;
+    status.textContent='';
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+document.getElementById('prompt-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') generate();
+});
+</script>
+</body>
+</html>
